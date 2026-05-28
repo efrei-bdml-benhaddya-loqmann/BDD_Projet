@@ -1,0 +1,66 @@
+erDiagram
+
+    SERVICE {
+        INT id_service PK
+        VARCHAR code_service "UNIQUE, format S##"
+        VARCHAR libelle
+    }
+
+    EMPLOYE {
+        INT id_employe PK
+        VARCHAR nom
+        VARCHAR prenom
+        VARCHAR email "UNIQUE"
+        DATE date_embauche
+        INT id_service FK
+        INT id_manager FK "NULL si sommet hiérarchie"
+    }
+
+    STATUTJOUR {
+        INT id_statut PK
+        VARCHAR libelle
+        CHAR code "UNIQUE: CP,RTT,TT,BUR,MAL,FOR"
+        BOOLEAN decompte_solde
+    }
+
+    ENTREEPLANNING {
+        INT id_entree PK
+        DATE date
+        ENUM demi_journee "matin|apres-midi|journee"
+        INT id_employe FK
+        INT id_statut FK
+    }
+
+    DEMANDECONGE {
+        INT id_demande PK
+        DATE date_debut
+        DATE date_fin
+        ENUM demi_journee_debut "matin|apres-midi|journee"
+        ENUM demi_journee_fin "matin|apres-midi|journee"
+        ENUM statut_demande "en_attente|validee|refusee"
+        DATETIME date_soumission
+        TEXT motif
+        INT id_employe FK
+        INT id_statut FK "type de congé demandé"
+        INT id_manager_valideur FK "NULL si pas encore traité"
+    }
+
+    SOLDECONGE {
+        INT id_solde PK
+        YEAR annee
+        DECIMAL jours_acquis
+        DECIMAL jours_pris
+        INT id_employe FK
+        INT id_statut FK "CP ou RTT uniquement"
+    }
+
+    %% Relations
+    SERVICE        ||--o{ EMPLOYE         : "emploie (1,N)"
+    EMPLOYE        ||--o{ EMPLOYE         : "manage (0,N) — auto-ref manager"
+    EMPLOYE        ||--o{ ENTREEPLANNING  : "a des entrées (1,N)"
+    STATUTJOUR     ||--o{ ENTREEPLANNING  : "qualifie (1,N)"
+    EMPLOYE        ||--o{ DEMANDECONGE    : "soumet (1,N)"
+    STATUTJOUR     ||--o{ DEMANDECONGE    : "type de congé (1,N)"
+    EMPLOYE        ||--o{ DEMANDECONGE    : "valide en tant que manager (0,N)"
+    EMPLOYE        ||--o{ SOLDECONGE      : "possède solde (1,N)"
+    STATUTJOUR     ||--o{ SOLDECONGE      : "concerne statut (1,N)"

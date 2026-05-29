@@ -1,9 +1,9 @@
 -- ====================================================
 -- requetes.sql
--- Projet BDD ALSI61 — Outil de gestion de planning
+-- Projet BDD ALSI61 — Application de réservation de congés
 -- ====================================================
--- 15 requêtes (R1 → R15).
--- R1-R10  : jointures, agrégats, regroupements, tri.
+-- 15 requêtes (R1 → R15), centrées sur le domaine « congés ».
+-- R1-R10  : jointures, agrégats, regroupements, tri, intervalles de dates.
 -- R11-R15 : sous-requêtes (scalaire, dérivée, corrélée) + EXISTS / NOT EXISTS.
 -- Chaque requête retourne au moins une ligne sur le jeu de données fourni.
 -- ====================================================
@@ -11,69 +11,72 @@ USE planning_entreprise;
 
 
 -- ----------------------------------------------------
--- R1. Liste de tous les employés avec leur service et leur manager.
---     Approche : jointure Employe-Service + auto-jointure pour le manager.
+-- R1. Toutes les demandes de congé avec demandeur, type et statut.
+--     Approche : jointures DemandeConge-Employe-StatutJour.
 -- ----------------------------------------------------
-SELECT  e.id_employe,
-        e.nom,
-        e.prenom,
-        s.libelle                                AS service,
-        CONCAT_WS(' ', m.prenom, m.nom)          AS manager
-FROM    Employe e
-JOIN    Service s ON s.id_service = e.id_service
-LEFT JOIN Employe m ON m.id_employe = e.id_manager
-ORDER BY e.nom, e.prenom;
+SELECT  dc.id_demande,
+        CONCAT_WS(' ', e.prenom, e.nom) AS demandeur,
+        sj.libelle                      AS type_conge,
+        dc.date_debut,
+        dc.date_fin,
+        dc.statut_demande
+FROM    DemandeConge dc
+JOIN    Employe e     ON e.id_employe = dc.id_employe
+JOIN    StatutJour sj ON sj.id_statut = dc.id_statut
+ORDER BY dc.date_soumission DESC;
 
 
 -- ----------------------------------------------------
--- R2. Nombre d'employés par service.
---     Approche : regroupement + COUNT.
+-- R2. Nombre de demandes de congé par service.
+--     Approche : jointures + regroupement + COUNT.
 -- ----------------------------------------------------
-SELECT  s.code_service,
-        s.libelle,
-        COUNT(e.id_employe) AS nb_employes
+SELECT  s.libelle                  AS service,
+        COUNT(dc.id_demande)       AS nb_demandes
 FROM    Service s
-LEFT JOIN Employe e ON e.id_service = s.id_service
-GROUP BY s.id_service, s.code_service, s.libelle
-ORDER BY nb_employes DESC;
+JOIN    Employe e      ON e.id_service = s.id_service
+LEFT JOIN DemandeConge dc ON dc.id_employe = e.id_employe
+GROUP BY s.id_service, s.libelle
+ORDER BY nb_demandes DESC;
 
 
 -- ----------------------------------------------------
--- R3. Employés embauchés depuis le 01/01/2020.
---     Approche : filtre sur une date.
+-- R3. Nombre total de jours de congé VALIDÉS par employé.
+--     Approche : filtre sur le statut + somme calculée (DATEDIFF) + regroupement.
 -- ----------------------------------------------------
-SELECT  nom, prenom, date_embauche
-FROM    Employe
-WHERE   date_embauche >= '2020-01-01'
-ORDER BY date_embauche;
-
-
--- ----------------------------------------------------
--- R4. Planning détaillé de l'employé id = 1 (la DG), trié par date.
---     Approche : jointure planning-statut + filtre + tri.
--- ----------------------------------------------------
-SELECT  ep.date,
-        ep.demi_journee,
-        sj.libelle AS statut
-FROM    EntreePlanning ep
-JOIN    StatutJour sj ON sj.id_statut = ep.id_statut
-WHERE   ep.id_employe = 1
-ORDER BY ep.date, ep.demi_journee;
-
-
--- ----------------------------------------------------
--- R5. Nombre de jours de télétravail par employé.
---     Approche : filtre code='TT' + regroupement + COUNT.
--- ----------------------------------------------------
-SELECT  e.nom,
-        e.prenom,
-        COUNT(ep.id_entree) AS nb_jours_tt
+SELECT  CONCAT_WS(' ', e.prenom, e.nom)                       AS employe,
+        SUM(DATEDIFF(dc.date_fin, dc.date_debut) + 1)         AS nb_jours_valides
 FROM    Employe e
-JOIN    EntreePlanning ep ON ep.id_employe = e.id_employe
-JOIN    StatutJour sj     ON sj.id_statut  = ep.id_statut
-WHERE   sj.code = 'TT'
-GROUP BY e.id_employe, e.nom, e.prenom
-ORDER BY nb_jours_tt DESC;
+JOIN    DemandeConge dc ON dc.id_employe = e.id_employe
+WHERE   dc.statut_demande = 'validee'
+GROUP BY e.id_employe, e.prenom, e.nom
+ORDER BY nb_jours_valides DESC;
+
+
+-- ----------------------------------------------------
+-- R4. Historique des demandes de l'employé id = 9 (Léa), triées par date.
+--     Approche : jointure + filtre + tri.
+-- ----------------------------------------------------
+SELECT  dc.date_debut,
+        dc.date_fin,
+        sj.libelle AS type_conge,
+        dc.statut_demande
+FROM    DemandeConge dc
+JOIN    StatutJour sj ON sj.id_statut = dc.id_statut
+WHERE   dc.id_employe = 9
+ORDER BY dc.date_debut;
+
+
+-- ----------------------------------------------------
+-- R5. Pour chaque manager valideur : nombre de demandes traitées par statut.
+--     Approche : jointure + regroupement multi-colonnes.
+-- ----------------------------------------------------
+SELECT  CONCAT_WS(' ', v.prenom, v.nom) AS valideur,
+        dc.statut_demande,
+        COUNT(*)                        AS nb
+FROM    DemandeConge dc
+JOIN    Employe v ON v.id_employe = dc.id_manager_valideur
+GROUP BY dc.id_manager_valideur, v.prenom, v.nom, dc.statut_demande
+ORDER BY valideur, dc.statut_demande;
 
 
 -- ----------------------------------------------------
@@ -93,16 +96,18 @@ ORDER BY dc.date_debut;
 
 
 -- ----------------------------------------------------
--- R7. Managers et nombre de collaborateurs directs.
---     Approche : auto-jointure Employe (manager) + regroupement.
+-- R7. Pour chaque manager : nombre de demandes de son équipe en attente de validation.
+--     Approche : auto-jointure (manager/subordonné) + LEFT JOIN + regroupement.
 -- ----------------------------------------------------
-SELECT  m.nom,
-        m.prenom,
-        COUNT(e.id_employe) AS nb_subordonnes
+SELECT  CONCAT_WS(' ', m.prenom, m.nom) AS manager,
+        COUNT(dc.id_demande)            AS nb_a_valider
 FROM    Employe m
 JOIN    Employe e ON e.id_manager = m.id_employe
-GROUP BY m.id_employe, m.nom, m.prenom
-ORDER BY nb_subordonnes DESC;
+LEFT JOIN DemandeConge dc
+       ON dc.id_employe = e.id_employe
+      AND dc.statut_demande = 'en_attente'
+GROUP BY m.id_employe, m.prenom, m.nom
+ORDER BY nb_a_valider DESC;
 
 
 -- ----------------------------------------------------
@@ -122,28 +127,34 @@ ORDER BY employe, type_conge;
 
 
 -- ----------------------------------------------------
--- R9. Répartition des statuts sur la semaine du 25 au 29/05/2026.
---     Approche : filtre par intervalle de dates + regroupement.
+-- R9. Demandes de congé chevauchant la semaine du 25 au 29/05/2026, par type.
+--     Approche : filtre par intervalle de dates (chevauchement) + regroupement.
 -- ----------------------------------------------------
-SELECT  sj.libelle,
-        sj.code,
-        COUNT(ep.id_entree) AS nb_entrees
-FROM    EntreePlanning ep
-JOIN    StatutJour sj ON sj.id_statut = ep.id_statut
-WHERE   ep.date BETWEEN '2026-05-25' AND '2026-05-29'
-GROUP BY sj.id_statut, sj.libelle, sj.code
-ORDER BY nb_entrees DESC;
+SELECT  sj.libelle      AS type_conge,
+        COUNT(*)        AS nb_demandes
+FROM    DemandeConge dc
+JOIN    StatutJour sj ON sj.id_statut = dc.id_statut
+WHERE   dc.date_debut <= '2026-05-29'
+  AND   dc.date_fin   >= '2026-05-25'
+GROUP BY sj.id_statut, sj.libelle
+ORDER BY nb_demandes DESC;
 
 
 -- ----------------------------------------------------
--- R10. Chaque employé avec le nom de son manager (NULL = sommet hiérarchie).
---      Approche : LEFT JOIN auto-référente.
+-- R10. Demandes refusées : demandeur, type, motif et manager ayant refusé.
+--      Approche : jointures + LEFT JOIN auto-référente sur le valideur.
 -- ----------------------------------------------------
-SELECT  CONCAT_WS(' ', e.prenom, e.nom)              AS employe,
-        COALESCE(CONCAT_WS(' ', m.prenom, m.nom), '— (Direction)') AS manager
-FROM    Employe e
-LEFT JOIN Employe m ON m.id_employe = e.id_manager
-ORDER BY manager, employe;
+SELECT  CONCAT_WS(' ', e.prenom, e.nom) AS demandeur,
+        sj.libelle                      AS type_conge,
+        dc.date_debut,
+        dc.motif,
+        CONCAT_WS(' ', v.prenom, v.nom) AS refuse_par
+FROM    DemandeConge dc
+JOIN    Employe e     ON e.id_employe = dc.id_employe
+JOIN    StatutJour sj ON sj.id_statut = dc.id_statut
+LEFT JOIN Employe v   ON v.id_employe = dc.id_manager_valideur
+WHERE   dc.statut_demande = 'refusee'
+ORDER BY dc.date_debut;
 
 
 -- ====================================================
@@ -171,24 +182,23 @@ ORDER BY cp_restant DESC;
 
 
 -- ----------------------------------------------------
--- R12. Employés ayant plus d'entrées de planning que la MOYENNE
---      d'entrées par employé.
+-- R12. Employés ayant déposé plus de demandes que la MOYENNE
+--      de demandes par employé (parmi ceux qui en ont déposé).
 --      Approche : sous-requête dérivée (table dérivée) + HAVING.
 -- ----------------------------------------------------
-SELECT  e.nom,
-        e.prenom,
-        COUNT(ep.id_entree) AS nb_entrees
+SELECT  CONCAT_WS(' ', e.prenom, e.nom) AS employe,
+        COUNT(dc.id_demande)            AS nb_demandes
 FROM    Employe e
-JOIN    EntreePlanning ep ON ep.id_employe = e.id_employe
-GROUP BY e.id_employe, e.nom, e.prenom
-HAVING  COUNT(ep.id_entree) > (
+JOIN    DemandeConge dc ON dc.id_employe = e.id_employe
+GROUP BY e.id_employe, e.prenom, e.nom
+HAVING  COUNT(dc.id_demande) > (
             SELECT AVG(nb) FROM (
                 SELECT COUNT(*) AS nb
-                FROM   EntreePlanning
+                FROM   DemandeConge
                 GROUP BY id_employe
             ) AS sous_total
         )
-ORDER BY nb_entrees DESC;
+ORDER BY nb_demandes DESC;
 
 
 -- ----------------------------------------------------
@@ -207,17 +217,15 @@ ORDER BY e.nom;
 
 
 -- ----------------------------------------------------
--- R14. Employés n'ayant JAMAIS télétravaillé (aucune entrée TT).
+-- R14. Employés n'ayant JAMAIS déposé de demande de congé.
 --      Approche : NOT EXISTS (sous-requête corrélée).
 -- ----------------------------------------------------
 SELECT  e.nom, e.prenom
 FROM    Employe e
 WHERE   NOT EXISTS (
             SELECT 1
-            FROM   EntreePlanning ep
-            JOIN   StatutJour sj ON sj.id_statut = ep.id_statut
-            WHERE  ep.id_employe = e.id_employe
-              AND  sj.code = 'TT'
+            FROM   DemandeConge dc
+            WHERE  dc.id_employe = e.id_employe
         )
 ORDER BY e.nom;
 

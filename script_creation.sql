@@ -231,18 +231,18 @@ INSERT INTO StatutJour (libelle, code, decompte_solde) VALUES
 -- EMPLOYE  (managers insérés avant leurs subordonnés)
 -- ----------------------------------------
 INSERT INTO Employe (nom, prenom, email, date_embauche, id_service, id_manager) VALUES
-    ('Martin',  'Sophie', 'sophie.martin@entreprise.fr',  '2015-03-01', 1, NULL);
+    ('Benhaddya', 'Loqmann', 'loqmann.benhaddya@entreprise.fr', '2015-03-01', 1, NULL);
 INSERT INTO Employe (nom, prenom, email, date_embauche, id_service, id_manager) VALUES
-    ('Dubois',  'Pierre', 'pierre.dubois@entreprise.fr',  '2017-09-15', 2, 1),
-    ('Bernard', 'Claire', 'claire.bernard@entreprise.fr', '2018-01-10', 3, 1),
-    ('Moreau',  'Luc',    'luc.moreau@entreprise.fr',     '2016-06-20', 4, 1);
+    ('Azdad',            'Samy',   'samy.azdad@entreprise.fr',             '2017-09-15', 2, 1),
+    ('Djaleu Tchouamou', 'Ingrid', 'ingrid.djaleu.tchouamou@entreprise.fr','2018-01-10', 3, 1),
+    ('Badoz',            'Marius', 'marius.badoz@entreprise.fr',           '2016-06-20', 4, 1);
 INSERT INTO Employe (nom, prenom, email, date_embauche, id_service, id_manager) VALUES
-    ('Petit',   'Julie',  'julie.petit@entreprise.fr',    '2020-02-03', 2, 2),
-    ('Robert',  'Thomas', 'thomas.robert@entreprise.fr',  '2021-11-08', 2, 2),
-    ('Richard', 'Emma',   'emma.richard@entreprise.fr',   '2019-05-22', 3, 3),
-    ('Durand',  'Hugo',   'hugo.durand@entreprise.fr',    '2022-03-14', 4, 4),
-    ('Simon',   'Lea',    'lea.simon@entreprise.fr',      '2023-09-01', 4, 4),
-    ('Laurent', 'Nathan', 'nathan.laurent@entreprise.fr', '2021-01-18', 2, 2);
+    ('Derra',    'Abdel Founeke', 'abdel.derra@entreprise.fr',     '2020-02-03', 2, 2),
+    ('Chemli',   'Hechmi',        'hechmi.chemli@entreprise.fr',   '2021-11-08', 2, 2),
+    ('Ba',       'Djeneba',       'djeneba.ba@entreprise.fr',      '2019-05-22', 3, 3),
+    ('Brignone', 'Anissa',        'anissa.brignone@entreprise.fr', '2022-03-14', 4, 4),
+    ('Bichart',  'Adrien',        'adrien.bichart@entreprise.fr',  '2023-09-01', 4, 4),
+    ('Grondin',  'David',         'david.grondin@entreprise.fr',   '2021-01-18', 2, 2);
 
 -- ----------------------------------------
 -- ENTREEPLANNING — semaine du 25/05/2026 (lun) au 29/05/2026 (ven)

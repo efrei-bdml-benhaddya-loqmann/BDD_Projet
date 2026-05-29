@@ -53,7 +53,7 @@ ORDER BY nb_jours_valides DESC;
 
 
 -- ----------------------------------------------------
--- R4. Historique des demandes de l'employé id = 9 (Léa), triées par date.
+-- R4. Historique des demandes de l'employé id = 9 (Adrien Bichart), triées par date.
 --     Approche : jointure + filtre + tri.
 -- ----------------------------------------------------
 SELECT  dc.date_debut,

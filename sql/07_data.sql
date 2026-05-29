@@ -32,62 +32,62 @@ INSERT INTO StatutJour (libelle, code, decompte_solde) VALUES
 -- ----------------------------------------
 -- 1 = Direction générale (pas de manager)
 INSERT INTO Employe (nom, prenom, email, date_embauche, id_service, id_manager) VALUES
-    ('Martin',  'Sophie', 'sophie.martin@entreprise.fr',  '2015-03-01', 1, NULL);
+    ('Benhaddya', 'Loqmann', 'loqmann.benhaddya@entreprise.fr', '2015-03-01', 1, NULL);
 -- 2,3,4 = responsables de service, rattachés à la DG (id 1)
 INSERT INTO Employe (nom, prenom, email, date_embauche, id_service, id_manager) VALUES
-    ('Dubois',  'Pierre', 'pierre.dubois@entreprise.fr',  '2017-09-15', 2, 1),
-    ('Bernard', 'Claire', 'claire.bernard@entreprise.fr', '2018-01-10', 3, 1),
-    ('Moreau',  'Luc',    'luc.moreau@entreprise.fr',     '2016-06-20', 4, 1);
+    ('Azdad',            'Samy',   'samy.azdad@entreprise.fr',             '2017-09-15', 2, 1),
+    ('Djaleu Tchouamou', 'Ingrid', 'ingrid.djaleu.tchouamou@entreprise.fr','2018-01-10', 3, 1),
+    ('Badoz',            'Marius', 'marius.badoz@entreprise.fr',           '2016-06-20', 4, 1);
 -- 5..10 = collaborateurs
 INSERT INTO Employe (nom, prenom, email, date_embauche, id_service, id_manager) VALUES
-    ('Petit',   'Julie',  'julie.petit@entreprise.fr',    '2020-02-03', 2, 2),
-    ('Robert',  'Thomas', 'thomas.robert@entreprise.fr',  '2021-11-08', 2, 2),
-    ('Richard', 'Emma',   'emma.richard@entreprise.fr',   '2019-05-22', 3, 3),
-    ('Durand',  'Hugo',   'hugo.durand@entreprise.fr',    '2022-03-14', 4, 4),
-    ('Simon',   'Lea',    'lea.simon@entreprise.fr',      '2023-09-01', 4, 4),
-    ('Laurent', 'Nathan', 'nathan.laurent@entreprise.fr', '2021-01-18', 2, 2);
+    ('Derra',    'Abdel Founeke', 'abdel.derra@entreprise.fr',     '2020-02-03', 2, 2),
+    ('Chemli',   'Hechmi',        'hechmi.chemli@entreprise.fr',   '2021-11-08', 2, 2),
+    ('Ba',       'Djeneba',       'djeneba.ba@entreprise.fr',      '2019-05-22', 3, 3),
+    ('Brignone', 'Anissa',        'anissa.brignone@entreprise.fr', '2022-03-14', 4, 4),
+    ('Bichart',  'Adrien',        'adrien.bichart@entreprise.fr',  '2023-09-01', 4, 4),
+    ('Grondin',  'David',         'david.grondin@entreprise.fr',   '2021-01-18', 2, 2);
 
 -- ----------------------------------------
 -- ENTREEPLANNING — semaine du 25/05/2026 (lun) au 29/05/2026 (ven)
 -- ----------------------------------------
 INSERT INTO EntreePlanning (date, demi_journee, id_employe, id_statut) VALUES
-    -- Emp 1 (Sophie, Direction)
+    -- Emp 1 (Loqmann Benhaddya, Direction)
     ('2026-05-25', 'journee', 1, 4), ('2026-05-26', 'journee', 1, 4),
     ('2026-05-27', 'journee', 1, 3), ('2026-05-28', 'journee', 1, 4),
     ('2026-05-29', 'journee', 1, 3),
-    -- Emp 2 (Pierre, Info)
+    -- Emp 2 (Samy Azdad, Info)
     ('2026-05-25', 'journee', 2, 4), ('2026-05-26', 'journee', 2, 3),
     ('2026-05-27', 'journee', 2, 4), ('2026-05-28', 'journee', 2, 4),
     ('2026-05-29', 'journee', 2, 3),
-    -- Emp 3 (Claire, RH)
+    -- Emp 3 (Ingrid Djaleu Tchouamou, RH)
     ('2026-05-25', 'journee', 3, 4), ('2026-05-26', 'journee', 3, 4),
     ('2026-05-27', 'journee', 3, 4), ('2026-05-28', 'journee', 3, 3),
     ('2026-05-29', 'journee', 3, 1),
-    -- Emp 4 (Luc, Commercial) — formation jeu/ven
+    -- Emp 4 (Marius Badoz, Commercial) — formation jeu/ven
     ('2026-05-25', 'journee', 4, 3), ('2026-05-26', 'journee', 4, 4),
     ('2026-05-27', 'journee', 4, 4), ('2026-05-28', 'journee', 4, 6),
     ('2026-05-29', 'journee', 4, 6),
-    -- Emp 5 (Julie, Info) — vendredi en demi-journées (matin bureau / aprem télétravail)
+    -- Emp 5 (Abdel Founeke Derra, Info) — vendredi en demi-journées (matin bureau / aprem télétravail)
     ('2026-05-25', 'journee', 5, 4), ('2026-05-26', 'journee', 5, 4),
     ('2026-05-27', 'journee', 5, 3), ('2026-05-28', 'journee', 5, 3),
     ('2026-05-29', 'matin', 5, 4), ('2026-05-29', 'apres-midi', 5, 3),
-    -- Emp 6 (Thomas, Info) — maladie début de semaine
+    -- Emp 6 (Hechmi Chemli, Info) — maladie début de semaine
     ('2026-05-25', 'journee', 6, 5), ('2026-05-26', 'journee', 6, 5),
     ('2026-05-27', 'journee', 6, 4), ('2026-05-28', 'journee', 6, 4),
     ('2026-05-29', 'journee', 6, 4),
-    -- Emp 7 (Emma, RH)
+    -- Emp 7 (Djeneba Ba, RH)
     ('2026-05-25', 'journee', 7, 4), ('2026-05-26', 'journee', 7, 2),
     ('2026-05-27', 'journee', 7, 4), ('2026-05-28', 'journee', 7, 4),
     ('2026-05-29', 'journee', 7, 3),
-    -- Emp 8 (Hugo, Commercial)
+    -- Emp 8 (Anissa Brignone, Commercial)
     ('2026-05-25', 'journee', 8, 4), ('2026-05-26', 'journee', 8, 4),
     ('2026-05-27', 'journee', 8, 4), ('2026-05-28', 'journee', 8, 4),
     ('2026-05-29', 'journee', 8, 1),
-    -- Emp 9 (Lea, Commercial) — congé début de semaine
+    -- Emp 9 (Adrien Bichart, Commercial) — congé début de semaine
     ('2026-05-25', 'journee', 9, 1), ('2026-05-26', 'journee', 9, 1),
     ('2026-05-27', 'journee', 9, 4), ('2026-05-28', 'journee', 9, 4),
     ('2026-05-29', 'journee', 9, 4),
-    -- Emp 10 (Nathan, Info)
+    -- Emp 10 (David Grondin, Info)
     ('2026-05-25', 'journee', 10, 4), ('2026-05-26', 'journee', 10, 3),
     ('2026-05-27', 'journee', 10, 4), ('2026-05-28', 'journee', 10, 4),
     ('2026-05-29', 'journee', 10, 6);

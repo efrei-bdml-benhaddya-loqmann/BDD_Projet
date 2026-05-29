@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Modifier' if demande else 'Réserver' }} un congé{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">{{ 'Modifier ma demande' if demande else 'Réserver un congé' }}</h1>
+
+<form method="post" class="row g-3" style="max-width: 560px;">
+  <div class="col-12">
+    <label class="form-label">Type de congé</label>
+    <select name="id_statut" class="form-select" required>
+      {% for t in types %}
+        <option value="{{ t.id_statut }}"
+          {% if demande and demande.id_statut == t.id_statut %}selected{% endif %}>
+          {{ t.libelle }} ({{ t.code }})
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Date de début</label>
+    <input type="date" name="date_debut" class="form-control" required
+           value="{{ demande.date_debut.isoformat() if demande else '' }}">
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Date de fin</label>
+    <input type="date" name="date_fin" class="form-control" required
+           value="{{ demande.date_fin.isoformat() if demande else '' }}">
+  </div>
+  <div class="col-12">
+    <label class="form-label">Motif (optionnel)</label>
+    <textarea name="motif" class="form-control" rows="2">{{ demande.motif if demande and demande.motif else '' }}</textarea>
+  </div>
+  <div class="col-12">
+    <button class="btn btn-primary" type="submit">{{ 'Enregistrer' if demande else 'Envoyer la demande' }}</button>
+    <a class="btn btn-link" href="{{ url_for('mes_conges') }}">Annuler</a>
+  </div>
+</form>
+<p class="text-muted small mt-3">La date de fin doit être ≥ à la date de début (contrainte vérifiée par la base).</p>
+{% endblock %}

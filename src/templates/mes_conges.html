@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Mes congés{% endblock %}
+
+{% block content %}
+
+<!-- Soldes -->
+<div class="row mb-4">
+  {% for s in soldes %}
+    <div class="col-sm-6 col-lg-3 mb-2">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <h6 class="card-subtitle text-muted">{{ s.type_conge }} — {{ s.annee }}</h6>
+          <p class="display-6 mb-0">{{ s.restant }}</p>
+          <small class="text-muted">jour(s) restant(s) sur {{ s.jours_acquis }}</small>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="col"><p class="text-muted">Aucun solde enregistré.</p></div>
+  {% endfor %}
+</div>
+
+<!-- Mes demandes -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Mes demandes de congé</h1>
+  <a class="btn btn-primary" href="{{ url_for('conge_reserver') }}">+ Réserver un congé</a>
+</div>
+
+<div class="btn-group btn-group-sm mb-3">
+  <a class="btn btn-outline-secondary {{ 'active' if statut == '' }}" href="{{ url_for('mes_conges') }}">Toutes</a>
+  <a class="btn btn-outline-secondary {{ 'active' if statut == 'en_attente' }}" href="{{ url_for('mes_conges', statut='en_attente') }}">En attente</a>
+  <a class="btn btn-outline-secondary {{ 'active' if statut == 'validee' }}" href="{{ url_for('mes_conges', statut='validee') }}">Validées</a>
+  <a class="btn btn-outline-secondary {{ 'active' if statut == 'refusee' }}" href="{{ url_for('mes_conges', statut='refusee') }}">Refusées</a>
+</div>
+
+<table class="table table-hover bg-white">
+  <thead class="table-light">
+    <tr><th>Type</th><th>Du</th><th>Au</th><th>Motif</th><th>Statut</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for d in demandes %}
+      <tr>
+        <td>{{ d.type_conge }}</td>
+        <td>{{ d.date_debut.strftime('%d/%m/%Y') }}</td>
+        <td>{{ d.date_fin.strftime('%d/%m/%Y') }}</td>
+        <td class="text-muted small">{{ d.motif or '—' }}</td>
+        <td>
+          {% if d.statut_demande == 'validee' %}<span class="badge bg-success">Validée</span>
+          {% elif d.statut_demande == 'refusee' %}<span class="badge bg-danger">Refusée</span>
+          {% else %}<span class="badge bg-warning text-dark">En attente</span>{% endif %}
+        </td>
+        <td class="text-end">
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('conge_detail', id_demande=d.id_demande) }}">Détail</a>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="text-muted">Aucune demande{% if statut %} ({{ statut }}){% endif %}.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Validation manager (inline) -->
+{% if a_valider %}
+  <h2 class="h5 mt-5">Demandes de mon équipe à valider</h2>
+  <table class="table bg-white">
+    <thead class="table-light">
+      <tr><th>Demandeur</th><th>Type</th><th>Du</th><th>Au</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for d in a_valider %}
+        <tr>
+          <td>{{ d.demandeur }}</td>
+          <td>{{ d.type_conge }}</td>
+          <td>{{ d.date_debut.strftime('%d/%m/%Y') }}</td>
+          <td>{{ d.date_fin.strftime('%d/%m/%Y') }}</td>
+          <td class="text-end">
+            <form class="d-inline" method="post" action="{{ url_for('conge_valider', id_demande=d.id_demande) }}">
+              <button class="btn btn-sm btn-success">Valider</button>
+            </form>
+            <form class="d-inline" method="post" action="{{ url_for('conge_refuser', id_demande=d.id_demande) }}">
+              <button class="btn btn-sm btn-outline-danger">Refuser</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% endblock %}

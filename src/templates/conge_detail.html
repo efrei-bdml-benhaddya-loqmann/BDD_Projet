@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Demande #{{ demande.id_demande }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Demande de congé #{{ demande.id_demande }}</h1>
+  <a class="btn btn-link" href="{{ url_for('mes_conges') }}">Retour</a>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Demandeur</dt><dd class="col-sm-9">{{ demande.demandeur }}</dd>
+      <dt class="col-sm-3">Type</dt><dd class="col-sm-9">{{ demande.type_conge }}</dd>
+      <dt class="col-sm-3">Période</dt>
+      <dd class="col-sm-9">du {{ demande.date_debut.strftime('%d/%m/%Y') }} au {{ demande.date_fin.strftime('%d/%m/%Y') }} ({{ nb_jours }} jour(s))</dd>
+      <dt class="col-sm-3">Motif</dt><dd class="col-sm-9">{{ demande.motif or '—' }}</dd>
+      <dt class="col-sm-3">Statut</dt>
+      <dd class="col-sm-9">
+        {% if demande.statut_demande == 'validee' %}<span class="badge bg-success">Validée</span>
+        {% elif demande.statut_demande == 'refusee' %}<span class="badge bg-danger">Refusée</span>
+        {% else %}<span class="badge bg-warning text-dark">En attente</span>{% endif %}
+      </dd>
+      {% if demande.valideur %}
+        <dt class="col-sm-3">Traitée par</dt><dd class="col-sm-9">{{ demande.valideur }}</dd>
+      {% endif %}
+      <dt class="col-sm-3">Soumise le</dt><dd class="col-sm-9">{{ demande.date_soumission.strftime('%d/%m/%Y %H:%M') }}</dd>
+    </dl>
+  </div>
+</div>
+
+{% if demande.statut_demande == 'en_attente' %}
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-secondary" href="{{ url_for('conge_modifier', id_demande=demande.id_demande) }}">Modifier</a>
+
+    <form method="post" action="{{ url_for('conge_annuler', id_demande=demande.id_demande) }}"
+          onsubmit="return confirm('Annuler définitivement cette demande ?');">
+      <button class="btn btn-outline-danger">Annuler la demande</button>
+    </form>
+
+    {% if peut_valider %}
+      <span class="vr"></span>
+      <form method="post" action="{{ url_for('conge_valider', id_demande=demande.id_demande) }}">
+        <button class="btn btn-success">Valider (manager)</button>
+      </form>
+      <form method="post" action="{{ url_for('conge_refuser', id_demande=demande.id_demande) }}">
+        <button class="btn btn-danger">Refuser (manager)</button>
+      </form>
+    {% endif %}
+  </div>
+  {% if peut_valider %}
+    <p class="text-muted small mt-2">Tu es le manager de cet employé : tu peux valider ou refuser. La validation décompte le solde (CP/RTT) et respecte la contrainte de solde non négatif.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

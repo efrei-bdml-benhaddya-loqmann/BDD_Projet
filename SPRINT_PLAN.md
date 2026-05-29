@@ -21,7 +21,7 @@
 - ≥ 5 entités distinctes ✅
 - Association ternaire OU porteuse d'attributs ✅ (voir §3)
 - 3FN ✅
-- Une entité "principale" pour les fonctionnalités CRUD de l'app : **Employé**
+- Une entité "principale" pour les fonctionnalités CRUD de l'app : **DemandeConge** (l'app est centrée sur la réservation de congés : un employé réserve/modifie/annule ses demandes, le manager valide/refuse).
 
 ---
 
@@ -73,7 +73,7 @@
 | **P0** | `script_creation.sql` — DDL complet | 1.5 h | Dev 1 | MLD |
 | **P0** | `script_creation.sql` — DML jeu de données cohérent (≥ 5 employés, 2 services, 6 statuts, 30+ entrées planning, 10+ demandes, soldes) | 1.5 h | Dev 2 | DDL |
 | **P0** | `requetes.sql` — Les 15 requêtes R1→R15 avec commentaires | 3 h | Dev 2 | DML |
-| **P0** | App Python **Flask** : connexion MySQL + 8 fonctionnalités sur Employé + grille calendrier | 4 h | Dev 1 | DDL |
+| **P0** | App Python **Flask** : connexion MySQL + 8 fonctionnalités sur DemandeConge (réserver, lister+filtrer, détail, modifier, annuler, valider, refuser) + grille calendrier équipe | 4 h | Dev 1 | DDL |
 | **P0** | Rapport PDF (domaine, règles, dictionnaire, MCD, MLD) | 2 h | Dev 3 | Tout précédent |
 | **P0** | README.txt (lancement, domaine, règles, dictionnaire) | 0.5 h | Dev 3 | App OK |
 | **P0** | Vidéo Panopto 12 min (les 3 visibles) | 2.5 h | Trio | Tout OK |
@@ -127,7 +127,7 @@
 | 0:00-0:30 | Intro + visages des 3 membres | Tous |
 | 0:30-4:00 | **Conception (3-4 min)** — choix entités, asso ternaire, cardinalités, 3FN | Dev 1 |
 | 4:00-6:30 | **Modèle physique (2-3 min)** — contenu tables, violation contrainte, FK ON DELETE | Dev 3 |
-| 6:30-11:00 | **Démo (4-5 min)** — 3-4 requêtes sur MySQL Workbench (exécution live, expliquer logique) + démo app Flask (grille calendrier, CRUD employé, recherche) | Dev 2 |
+| 6:30-11:00 | **Démo (4-5 min)** — 3-4 requêtes sur MySQL Workbench (exécution live, expliquer logique) + démo app Flask (réserver un congé, validation manager qui décompte le solde, grille calendrier) | Dev 2 |
 | 11:00-12:00 | Bilan critique + améliorations possibles | Tous |
 
 **Améliorations à citer dans le bilan :** authentification, soft delete + audit log, vues SQL pour reporting, gestion timezone, contraintes temporelles (chevauchement de congés), index sur `(id_employe, date)`.
@@ -154,7 +154,7 @@
 - [ ] **DDL** : `mysql -u root -p < script_creation.sql` passe sans erreur sur MySQL 8 vierge.
 - [ ] **DML** : volumes suffisants pour que chaque requête R1-R15 retourne ≥ 1 ligne.
 - [ ] **Requêtes** : 15/15, chacune avec commentaire d'approche, R11-R15 utilisent bien sous-requêtes/EXISTS/NOT EXISTS.
-- [ ] **App** : les 8 fonctionnalités demandées fonctionnent depuis le menu console.
+- [ ] **App** : les 8 fonctionnalités CRUD sur DemandeConge fonctionnent (réserver, lister+filtrer, détail, modifier, annuler, valider, refuser) depuis le menu web.
 - [ ] **Rapport PDF** : domaine + règles + dictionnaire + MCD + MLD.
 - [ ] **README.txt** : commande de lancement testée, domaine, règles, dictionnaire.
 - [ ] **Repo** : `ALSI-BDD_NOM1_NOM2_NOM3` avec arborescence exacte du sujet.
@@ -168,7 +168,8 @@
 - **Modélisation MCD** : draw.io (export PDF) — Workbench pour le MLD/diagramme physique.
 - **App** : Python 3.11+ avec **Flask** (micro-framework web léger) + **Jinja2** templates + **Bootstrap 5 via CDN** (aucun build, design propre out-of-the-box) + `mysql-connector-python` + `python-dotenv`.
 - **Pourquoi Flask et pas console ?** L'énoncé impose "menu d'accès aux fonctionnalités" — une interface web remplit cette exigence et fait beaucoup mieux à la vidéo. À assumer dans la démo : *"nous avons choisi une interface web légère plutôt que console, pour mieux visualiser le planning sous forme de calendrier"*.
-- **Visuel signature** : page d'accueil = **grille calendrier hebdo** (lignes = employés, colonnes = jours, cellules colorées par statut : vert=Bureau, bleu=TT, jaune=RTT, orange=CP, rouge=Maladie). Très impactant en 5 secondes de vidéo.
+- **Entité principale CRUD = DemandeConge** : l'app est une appli de **réservation de congés**. Page d'accueil = mes demandes + mes soldes ; l'employé réserve/modifie/annule, le manager valide/refuse (le manager courant est choisi via le sélecteur navbar, sans auth).
+- **Visuel signature** : page `/calendrier` = **grille hebdo** (lignes = employés, colonnes = jours, cellules colorées par statut : vert=Bureau, bleu=TT, jaune=RTT, orange=CP, rouge=Maladie). Très impactant en 5 secondes de vidéo.
 - **Pas de JavaScript custom** : tout en HTML + Bootstrap pour rester léger.
 - **Repo** : GitHub public, accès à `ChiboutBD`.
 - **Vidéo** : OBS ou Loom → upload Panopto.
@@ -177,16 +178,16 @@
 ```
 src/
 ├── app.py                  # routes Flask + queries
-├── db.py                   # connexion MySQL (singleton)
+├── db.py                   # connexion MySQL + helpers query/execute
 ├── requirements.txt        # flask, mysql-connector-python, python-dotenv
 ├── .env.example            # template credentials
 └── templates/
-    ├── base.html           # layout Bootstrap
-    ├── index.html          # grille calendrier hebdo
-    ├── employes.html       # CRUD employés (entité principale)
-    ├── employe_detail.html # détail + planning + demandes
-    ├── recherche.html      # recherche mot-clé
-    └── stats.html          # classement / stats globales
+    ├── base.html           # layout Bootstrap + sélecteur utilisateur (navbar)
+    ├── mes_conges.html     # accueil : mes demandes (entité principale) + soldes + filtre + à valider
+    ├── conge_form.html     # réserver / modifier une demande
+    ├── conge_detail.html   # détail + modifier/annuler + valider/refuser (manager)
+    ├── calendrier.html     # grille planning hebdo de l'équipe
+    └── stats.html          # statistiques des congés
 ```
 
 ---

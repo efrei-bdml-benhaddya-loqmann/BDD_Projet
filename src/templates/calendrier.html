@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Calendrier équipe{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Planning de l'équipe</h1>
+  <div class="btn-group">
+    <a class="btn btn-outline-secondary" href="{{ url_for('calendrier', s=offset - 1) }}">&larr; Précédente</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('calendrier') }}">Cette semaine</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('calendrier', s=offset + 1) }}">Suivante &rarr;</a>
+  </div>
+</div>
+
+<p class="text-muted">Du {{ debut.strftime('%d/%m/%Y') }} au {{ fin.strftime('%d/%m/%Y') }}</p>
+
+<div class="table-responsive">
+  <table class="table table-bordered bg-white align-middle text-center">
+    <thead class="table-light">
+      <tr>
+        <th class="text-start">Employé</th>
+        {% for jour in jours %}<th>{{ jour.strftime('%a %d/%m') }}</th>{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for emp in employes %}
+        <tr>
+          <td class="text-start">{{ emp.nom }} {{ emp.prenom }}
+            <div class="small text-muted">{{ emp.service }}</div>
+          </td>
+          {% for jour in jours %}
+            {% set cellule = planning.get(emp.id_employe, {}).get(jour.isoformat(), []) %}
+            <td>
+              {% for ent in cellule %}
+                <span class="badge" style="background-color: {{ couleurs.get(ent.code, '#6c757d') }};"
+                      title="{{ ent.libelle }} ({{ ent.demi_journee }})">
+                  {{ ent.code }}{% if ent.demi_journee != 'journee' %} <small>{{ 'AM' if ent.demi_journee == 'matin' else 'PM' }}</small>{% endif %}
+                </span>
+              {% endfor %}
+            </td>
+          {% endfor %}
+        </tr>
+      {% else %}
+        <tr><td colspan="{{ jours|length + 1 }}" class="text-muted">Aucun employé.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-3">
+  <strong>Légende :</strong>
+  {% for code, couleur in couleurs.items() %}
+    <span class="badge me-1" style="background-color: {{ couleur }};">{{ code }}</span>
+  {% endfor %}
+</div>
+{% endblock %}

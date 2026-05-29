@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Statistiques{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">Statistiques des congés</h1>
+
+<div class="row">
+  <div class="col-lg-4 mb-4">
+    <div class="card h-100">
+      <div class="card-header">Demandes par statut</div>
+      <ul class="list-group list-group-flush">
+        {% for r in demandes_par_statut %}
+          <li class="list-group-item d-flex justify-content-between text-capitalize">
+            {{ r.statut_demande.replace('_', ' ') }} <span class="badge bg-secondary">{{ r.nb }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-lg-4 mb-4">
+    <div class="card h-100">
+      <div class="card-header">Top 5 demandeurs</div>
+      <ol class="list-group list-group-numbered list-group-flush">
+        {% for r in top_demandeurs %}
+          <li class="list-group-item d-flex justify-content-between">
+            {{ r.employe }} <span class="badge bg-primary">{{ r.nb }}</span>
+          </li>
+        {% else %}
+          <li class="list-group-item text-muted">Aucune donnée.</li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+
+  <div class="col-lg-4 mb-4">
+    <div class="card h-100">
+      <div class="card-header">Répartition par type</div>
+      <ul class="list-group list-group-flush">
+        {% for r in repartition_types %}
+          <li class="list-group-item d-flex justify-content-between">
+            <span><span class="badge me-2" style="background-color: {{ couleurs.get(r.code, '#6c757d') }};">{{ r.code }}</span>{{ r.libelle }}</span>
+            <span class="badge bg-secondary">{{ r.nb }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
